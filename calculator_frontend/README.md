@@ -1,82 +1,48 @@
-# Lightweight React Template for KAVIA
+# Scientific Calculator (React)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A modern, minimalistic, and responsive scientific calculator built with React. It supports basic arithmetic and scientific functions, keyboard input, clear/delete actions, and optional Supabase-backed history.
 
 ## Features
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Basic arithmetic: `+ - × ÷ ^`
+- Scientific functions: `sin cos tan log ln √ x² 1/x EXP |x| π e`
+- Angle modes: `DEG` and `RAD`
+- Keyboard support: digits, `+ - * / ^`, `.`, `Enter`, `Backspace`, `Escape`
+- Clear (`C`) and Delete (`DEL`)
+- Responsive layout for mobile and desktop
+- Optional Supabase integration for recent calculation history
 
-## Getting Started
+## Quick Start
 
-In the project directory, you can run:
+From the `calculator_frontend` directory:
 
-### `npm start`
-
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-### `npm test`
-
-Launches the test runner in interactive watch mode.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
+```bash
+npm install
+npm start
 ```
 
-### Components
+Open http://localhost:3000 to use the app.
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+## Supabase (Optional)
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+1. Copy `.env.example` to `.env` and fill the values:
 
-## Learn More
+```
+REACT_APP_SUPABASE_URL=...
+REACT_APP_SUPABASE_KEY=...
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+2. Create a `calc_history` table and enable simple RLS as documented in `../assets/supabase.md`.
 
-### Code Splitting
+The UI will show "Supabase Connected" when ready.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Scripts
 
-### Analyzing the Bundle Size
+- `npm start` – Run dev server
+- `npm test` – Run tests
+- `npm run build` – Production build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Notes
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- This app uses plain CSS, no heavy UI framework.
+- The calculator will function fully without Supabase; history will be local-only (in-memory).
