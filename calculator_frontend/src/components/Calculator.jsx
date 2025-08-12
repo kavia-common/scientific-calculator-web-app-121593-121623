@@ -49,10 +49,11 @@ export default function Calculator() {
     let isMounted = true;
     async function loadHistory() {
       if (sbReady) {
-        // Verify that calc_history is exposed and accessible via REST.
+        // Verify that calc_history is readable via REST.
+        // If not readable due to RLS, keep Supabase enabled for write-only mode
+        // and just skip loading remote history.
         const ok = await checkCalcHistoryAccessible();
         if (!ok) {
-          if (isMounted) setSbReady(false);
           return;
         }
         const rows = await getRecentHistory(10);
@@ -91,8 +92,10 @@ export default function Calculator() {
     if (!sbReady) return;
     const { error } = await logCalculation(expression, result);
     if (error) {
-      // On failure, mark Supabase as not ready to avoid repeated errors
-      setSbReady(false);
+      // Keep Supabase enabled to allow retries; log for diagnostics.
+      // Common cause: RLS allows INSERT but denies SELECT; our insert no longer requests SELECT.
+      // eslint-disable-next-line no-console
+      console.warn('Supabase insert failed:', error?.message || error);
     }
   }
 

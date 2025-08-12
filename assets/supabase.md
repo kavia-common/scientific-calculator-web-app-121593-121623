@@ -42,7 +42,9 @@ create table if not exists public.calc_history (
 );
 ```
 
-Add Row Level Security (RLS) policy to allow inserts and reads for anon key (adjust for your needs):
+## 4) Row Level Security (RLS)
+
+Enable RLS and add policies suitable for your environment. For demo/dev with the anon key:
 
 ```sql
 alter table public.calc_history enable row level security;
@@ -60,15 +62,17 @@ to anon
 using (true);
 ```
 
-Important: This is intended for demo/dev purposes. For production, secure policies to your auth model.
+Notes:
+- Insert and Select permissions are independent. The app can work in write-only mode (insert without select), in which case the "recent history" list will be empty but inserts will succeed and show up in your table.
+- Our insert call does NOT request `return=representation`, so INSERT doesn't require SELECT permission.
 
-## 4) How It Works
+## 5) How It Works
 
 - On each evaluation (pressing `=` or applying a unary function), the app tries to insert a record into `calc_history`.
-- The history panel shows the last 10 items (descending by `created_at`).
-- If Supabase is not configured or an error occurs, the app continues to function without history syncing.
+- The history panel shows the last 10 items (descending by `created_at`) if SELECT is permitted by your RLS.
+- If Supabase is not configured or read access is blocked, the app continues to function and stores history in memory only.
 
-## 5) Environment Notes
+## 6) Environment Notes
 
 - Do not commit real credentials. Use `.env` which is ignored by VCS.
 - The deployment process should set these variables in the environment. The app reads them at build time.
@@ -111,43 +115,20 @@ where tablename = 'calc_history';
 
 ### Frontend Status
 - The app uses `process.env.REACT_APP_SUPABASE_URL` and `process.env.REACT_APP_SUPABASE_KEY`.
-- The UI will display a "Supabase Connected" badge once configured and when the `calc_history` table is accessible via REST.
-- If variables are missing or requests fail, the app continues offline and stores history in memory only.
+- The UI displays "Supabase Connected" when environment variables are present. If read access is denied by RLS, the history list will stay empty but inserts still work.
 
 ---
 
-## Troubleshooting 404 Not Found on /rest/v1/calc_history
+## Troubleshooting
 
-A 404 from `/rest/v1/calc_history` indicates PostgREST could not find the resource. Common causes:
-
-1) Table does not exist
+1) 404 Not Found on `/rest/v1/calc_history`
    - Ensure the table name is exactly `calc_history` and lives in the `public` schema.
-   - Run:
-     ```sql
-     select table_schema, table_name
-     from information_schema.tables
-     where table_schema = 'public' and table_name = 'calc_history';
-     ```
+   - Verify API → Exposed schemas includes `public`.
 
-2) Wrong schema or schema not exposed
-   - If you created the table in a non-`public` schema, either move it to `public` or expose that schema in API settings.
-   - In Supabase Dashboard: Project Settings → API → Exposed schemas
-     - Ensure `public` (or your target schema) is listed.
-   - The frontend now explicitly targets `public:calc_history` to avoid mismatches.
+2) Inserts not appearing in table
+   - Ensure your `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_KEY` are correct.
+   - Confirm RLS allows INSERT for your role (anon if using the anon key).
+   - Our code no longer requests SELECT on insert, so a missing SELECT policy will not block inserts.
 
-3) Typo in endpoint or table name
-   - The REST route is `/rest/v1/calc_history` (no schema prefix in the path). The framework infers schema from exposure settings.
-   - In code, we use `from('public:calc_history')` for clarity.
-
-4) RLS policy denies (usually 401/403, not 404)
-   - If you see 401/403 instead of 404, verify RLS policies allow `select` and `insert` for the anon role.
-   - Reapply the demo policies above as needed.
-
-5) Project/API reconfiguration or paused project
-   - Confirm your Supabase project is active and API is enabled in Project Settings → API.
-
-Client-side diagnostic:
-- The frontend calls a lightweight check on startup to verify `calc_history` is REST-accessible. If not, the UI marks Supabase as Offline and uses local-only history until connectivity is restored.
-
-Deployment tip:
-- Ensure environment variables are correctly set in your hosting provider so the build receives `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_KEY`.
+3) History not showing in the UI
+   - This requires SELECT permission. If RLS disallows SELECT for anon, the app will still insert but cannot read the recent history.
