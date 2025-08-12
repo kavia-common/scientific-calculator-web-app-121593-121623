@@ -111,6 +111,43 @@ where tablename = 'calc_history';
 
 ### Frontend Status
 - The app uses `process.env.REACT_APP_SUPABASE_URL` and `process.env.REACT_APP_SUPABASE_KEY`.
-- The UI will display a "Supabase Connected" badge once configured.
+- The UI will display a "Supabase Connected" badge once configured and when the `calc_history` table is accessible via REST.
 - If variables are missing or requests fail, the app continues offline and stores history in memory only.
 
+---
+
+## Troubleshooting 404 Not Found on /rest/v1/calc_history
+
+A 404 from `/rest/v1/calc_history` indicates PostgREST could not find the resource. Common causes:
+
+1) Table does not exist
+   - Ensure the table name is exactly `calc_history` and lives in the `public` schema.
+   - Run:
+     ```sql
+     select table_schema, table_name
+     from information_schema.tables
+     where table_schema = 'public' and table_name = 'calc_history';
+     ```
+
+2) Wrong schema or schema not exposed
+   - If you created the table in a non-`public` schema, either move it to `public` or expose that schema in API settings.
+   - In Supabase Dashboard: Project Settings → API → Exposed schemas
+     - Ensure `public` (or your target schema) is listed.
+   - The frontend now explicitly targets `public:calc_history` to avoid mismatches.
+
+3) Typo in endpoint or table name
+   - The REST route is `/rest/v1/calc_history` (no schema prefix in the path). The framework infers schema from exposure settings.
+   - In code, we use `from('public:calc_history')` for clarity.
+
+4) RLS policy denies (usually 401/403, not 404)
+   - If you see 401/403 instead of 404, verify RLS policies allow `select` and `insert` for the anon role.
+   - Reapply the demo policies above as needed.
+
+5) Project/API reconfiguration or paused project
+   - Confirm your Supabase project is active and API is enabled in Project Settings → API.
+
+Client-side diagnostic:
+- The frontend calls a lightweight check on startup to verify `calc_history` is REST-accessible. If not, the UI marks Supabase as Offline and uses local-only history until connectivity is restored.
+
+Deployment tip:
+- Ensure environment variables are correctly set in your hosting provider so the build receives `REACT_APP_SUPABASE_URL` and `REACT_APP_SUPABASE_KEY`.

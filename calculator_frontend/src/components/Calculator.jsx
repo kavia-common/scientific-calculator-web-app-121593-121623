@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { isSupabaseConfigured, logCalculation, getRecentHistory } from '../lib/supabaseClient';
+import { isSupabaseConfigured, logCalculation, getRecentHistory, checkCalcHistoryAccessible } from '../lib/supabaseClient';
 
 /**
  * Utility helpers for math operations
@@ -49,6 +49,12 @@ export default function Calculator() {
     let isMounted = true;
     async function loadHistory() {
       if (sbReady) {
+        // Verify that calc_history is exposed and accessible via REST.
+        const ok = await checkCalcHistoryAccessible();
+        if (!ok) {
+          if (isMounted) setSbReady(false);
+          return;
+        }
         const rows = await getRecentHistory(10);
         if (isMounted) setHistory(rows);
       }
