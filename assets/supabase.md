@@ -17,6 +17,8 @@ REACT_APP_SUPABASE_KEY=YOUR_PUBLIC_ANON_KEY
 
 Note: CRA requires variables to be prefixed with `REACT_APP_` to be available in the browser.
 
+Tip: An example file is included at `calculator_frontend/.env.example`. Copy it to `.env` and fill in your values.
+
 ## 2) Install Dependencies
 
 From the `calculator_frontend` directory:
@@ -70,4 +72,45 @@ Important: This is intended for demo/dev purposes. For production, secure polici
 
 - Do not commit real credentials. Use `.env` which is ignored by VCS.
 - The deployment process should set these variables in the environment. The app reads them at build time.
+
+---
+
+## Automated Backend Setup (Applied)
+
+The following configuration has been automatically applied to your Supabase project:
+
+1) Tables
+   - Created: `public.calc_history` with columns:
+     - `id uuid primary key default gen_random_uuid()`
+     - `expression text not null`
+     - `result text not null`
+     - `created_at timestamptz default now()`
+
+2) Row Level Security
+   - Enabled RLS on `public.calc_history`
+   - Policies created (idempotent):
+     - `Allow insert for anon` (insert, role: anon, with check true)
+     - `Allow select for anon` (select, role: anon, using true)
+
+These policies are intended for demo/dev only. In production, you should:
+- Replace anon policies with authenticated user policies.
+- Consider adding a `user_id uuid` column referencing `auth.users` and scope selects/inserts to `auth.uid()`.
+
+### Verification
+You can verify the setup using SQL:
+```sql
+-- Check table exists
+select table_schema, table_name from information_schema.tables
+where table_schema = 'public' and table_name = 'calc_history';
+
+-- Check policies
+select schemaname, tablename, policyname, permissive, roles, cmd
+from pg_policies
+where tablename = 'calc_history';
+```
+
+### Frontend Status
+- The app uses `process.env.REACT_APP_SUPABASE_URL` and `process.env.REACT_APP_SUPABASE_KEY`.
+- The UI will display a "Supabase Connected" badge once configured.
+- If variables are missing or requests fail, the app continues offline and stores history in memory only.
 
